@@ -16,6 +16,11 @@ class Nim(Game):
         moves = []
         # TODO: Generate all valid moves. For each heap that has at least 1 object,
         # generate moves for removing 1 up to all objects in that heap.
+        i = 0
+        for heap in state.board:
+            for j in range(heap):
+                moves.append((i, (j + 1)))
+            i += 1
         return moves
 
     def result(self, state, move):
@@ -24,12 +29,31 @@ class Nim(Game):
         # - move is a tuple (heap_index, number_removed)
         # - subtract number_removed from the specified heap
         # - switch the player turn
-        return None
+        i, x = move
+        heaps = list(state.board)
+        player = state.to_move
+        new_util = state.utility
+
+        heaps[i] -= x
+        new_state = GameState(to_move=('Player 2' if player == 'Player 1' else 'Player 1'), utility=new_util, board=heaps, moves=state.moves)
+
+        if(self.terminal_test(new_state)):
+            if player == 'Player 1':
+                new_util = 1
+            else:
+                new_util = -1
+
+        return GameState(to_move=('Player 2' if player == 'Player 1' else 'Player 1'), utility=new_util, board=heaps, moves=state.moves)
 
     def terminal_test(self, state):
         """Return True if the state is a terminal state (no moves left)."""
         # TODO: Check if all heaps are empty.
-        return False
+
+        for heap in state.board:
+            if heap > 0:
+                return False
+
+        return True
 
     def utility(self, state, player):
         """Return the value of this final state to the given player."""
@@ -38,7 +62,7 @@ class Nim(Game):
         # - If player is 'Player 1' and they win, return self.utility
         # - If player is 'Player 2' and they win, return -self.utility
         # See TicTacToe for an example.
-        return 0
+        return state.utility if player == 'Player 1' else -state.utility
 
     def display(self, state):
         """Print or display the state in a human-readable format."""
